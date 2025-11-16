@@ -1,0 +1,47 @@
+<!-- 
+
+Este é um arquivo de configuração do Hadoop, especificamente o yarn-site.xml. 
+Sua principal função é configurar o YARN (Yet Another Resource Negotiator), 
+que é o componente do cluster responsável por gerenciar e alocar recursos (como CPU e memória) 
+e agendar as tarefas (como jobs Spark ou MapReduce). 
+Este arquivo define onde o serviço "mestre" do YARN (o ResourceManager) está localizado (no host dsamaster), 
+quais são os recursos totais que cada nó de "trabalho" (o NodeManager) deve oferecer ao cluster 
+(neste caso, 2 vcores e 2048MB de RAM), e quais são os limites (mínimo e máximo) de memória que uma única tarefa pode solicitar. 
+Por fim, ele também ativa a agregação de logs, um recurso crucial que coleta os logs de todos os nós de trabalho 
+e os armazena em um local central (no HDFS) para facilitar a depuração.
+
+https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-common/yarn-default.xml
+ -->
+
+<?xml version="1.0"?>
+<configuration>
+    <property>
+        <name>yarn.resourcemanager.hostname</name>
+        <value>dsamaster</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.resource.cpu-vcores</name>
+        <value>2</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.resource.memory-mb</name>
+        <value>2048</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.maximum-allocation-mb</name>
+        <value>2048</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.minimum-allocation-mb</name>
+        <value>512</value>
+    </property>
+
+    <property>
+        <name>yarn.log-aggregation-enable</name>
+        <value>true</value>
+    </property>
+</configuration>

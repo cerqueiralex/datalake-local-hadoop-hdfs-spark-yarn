@@ -1,0 +1,25 @@
+# Este é um arquivo de configuração do cliente SSH.
+# Ele define o comportamento padrão para quando *você* tenta se conectar a *outro* servidor via SSH.
+
+# 'Host *' é um padrão "wildcard" que significa "aplique as seguintes regras para QUALQUER host".
+# Qualquer endereço IP ou nome de host para o qual você tentar se conectar (ex: ssh localhost, ssh dsamaster)
+# usará as configurações indentadas abaixo.
+
+
+# 'UserKnownHostsFile' especifica onde o SSH deve armazenar e procurar as chaves públicas dos servidores
+# aos quais você já se conectou (o arquivo 'known_hosts').
+# Aqui, ele está sendo apontado para '/dev/null'. '/dev/null' é um arquivo especial no Linux
+# que descarta tudo o que é escrito nele (um "buraco negro").
+# Efeito prático: O SSH nunca salvará a chave de um novo host e nunca verificará um host contra chaves salvas.
+
+# 'StrictHostKeyChecking' controla o que o SSH faz se a chave de um host não estiver no 'known_hosts'
+# ou se a chave do host tiver mudado.
+# O padrão é 'ask' (perguntar ao usuário) ou 'yes' (recusar a conexão se a chave mudou).
+# Definindo como 'no', o SSH automaticamente adicionará novas chaves ao 'known_hosts' (sem perguntar)
+# e se conectará mesmo se a chave do host tiver mudado.
+# Conexão com a linha anterior: Como o 'known_hosts' agora é /dev/null, a chave é "adicionada" (descartada)
+# automaticamente, permitindo a conexão sem NENHUMA pergunta.
+
+Host *
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no

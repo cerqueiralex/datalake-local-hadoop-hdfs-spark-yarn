@@ -1,0 +1,110 @@
+# Define um nome para o projeto do Docker Compose. 
+# Este nome será usado como prefixo para os containers, redes e volumes criados.
+name: datauniverse-data-lake
+
+# 'services' é a chave principal onde todos os containers (serviços) são definidos.
+services:
+  # Define o primeiro serviço: o nó mestre (master) do cluster.
+  datauniverse-data-lake-master:
+    # Define um nome fixo para este container.
+    # Facilita a referência a ele (ex: 'datauniversemaster') por outros serviços ou comandos.
+    # Este nome também funcionará como hostname dentro da rede Docker.
+    container_name: datauniversemaster
+    # 'build' instrui o Docker Compose a construir uma imagem localmente.
+    build:
+      # Especifica o nome do arquivo Dockerfile (no diretório 'context') a ser usado.
+      dockerfile: Dockerfile
+      # Define o diretório de "contexto" do build. '.' significa o diretório atual
+      # (onde o docker-compose.yml está e onde o Dockerfile e outros arquivos copiados estão).
+      context: .
+    # Define o nome e a tag da imagem que será criada pelo 'build'.
+    # Esta imagem será usada pelos outros serviços (worker e history-server),
+    # garantindo que todos os nós do cluster tenham o mesmo ambiente.
+    image: datauniverse-data-lake-image
+    # Sobrescreve o comando de entrada (ENTRYPOINT) padrão definido no Dockerfile.
+    # Executa o script './entrypoint.sh' e passa o argumento 'master'.
+    # Este argumento dirá ao script para iniciar os serviços de Mestre (HDFS Namenode, YARN ResourceManager, Spark Master).
+    entrypoint: ['./entrypoint.sh', 'master']
+    # 'volumes' monta diretórios ou volumes nomeados de fora (do host) para dentro do container.
+    volumes:
+      # Monta a pasta local './dados' na pasta '/opt/spark/data' dentro do container.
+      # Usado para disponibilizar arquivos de dados para o Spark/HDFS.
+      - ./dados:/opt/spark/data
+      # Monta a pasta local './jobs' (scripts Python/Scala) na pasta '/opt/spark/apps'.
+      # Permite submeter 'jobs' que estão na máquina local para o cluster executar.
+      - ./jobs:/opt/spark/apps
+      # Monta o volume nomeado 'data-lake-logs' na pasta '/opt/spark/data-lake-events'.
+      # Esta pasta é onde o Spark escreve seus logs de eventos (para o History Server).
+      - data-lake-logs:/opt/spark/data-lake-events
+    # 'env_file' aponta para um arquivo local que contém a lista de variáveis de ambiente.
+    # Todas as variáveis definidas em '.env.data-lake' serão carregadas neste container.
+    env_file:
+      - .env.data-lake
+    # 'ports' mapeia portas do container (interno) para a máquina host (externo).
+    # Formato: 'HOST:CONTAINER'
+    ports:
+      # Mapeia a porta 8080 (UI Web do Spark Master) do container para a porta 9091 no seu computador.
+      - '9091:8080'
+      # Mapeia a porta 9870 (UI Web do HDFS Namenode) do container para a porta 9871 no seu computador.
+      - '9871:9870'
+      # Mapeia a porta 7077 (Porta de comunicação interna do Spark Master) para a porta 7071 no seu computador.
+      - '7071:7077'
+      # Mapeia a porta 8088 (UI Web do YARN ResourceManager) do container para a porta 8081 no seu computador.
+      - '8081:8088'
+
+  # Define o segundo serviço: o Servidor de Histórico do Spark.
+  datauniverse-data-lake-history-server:
+    # Define o nome do container.
+    container_name: datauniversehistoryserver
+    # IMPORTANTE: Reutiliza a imagem 'datauniverse-data-lake-image' que foi construída
+    # pelo serviço 'datauniverse-data-lake-master'. Não precisa construir de novo.
+    image: datauniverse-data-lake-image
+    # Executa o mesmo script, mas passa o argumento 'history'.
+    # Isso instrui o script a iniciar apenas o serviço do Spark History Server.
+    entrypoint: ['./entrypoint.sh', 'history']
+    # 'depends_on' garante que este container só será iniciado DEPOIS que o
+    # 'datauniverse-data-lake-master' estiver pronto e em execução.
+    depends_on:
+      - datauniverse-data-lake-master
+    # Carrega as mesmas variáveis de ambiente do arquivo .env.
+    env_file:
+      - .env.data-lake
+    # Monta APENAS o volume de logs.
+    # O History Server lê os logs (escritos pelo master/worker) deste volume
+    # para exibir o histórico das aplicações Spark que já terminaram.
+    volumes:
+      - data-lake-logs:/opt/spark/data-lake-events
+    # Mapeia a porta do History Server.
+    ports:
+      # Mapeia a porta 18080 (UI Web do Spark History Server) do container para a porta 18081 no seu computador.
+      - '18081:18080'
+
+  # Define o terceiro serviço: o nó trabalhador (worker/slave) do cluster.
+  datauniverse-data-lake-worker:
+    # Reutiliza a mesma imagem 'datauniverse-data-lake-image' construída pelo mestre.
+    image: datauniverse-data-lake-image
+    # Executa o script 'entrypoint.sh' e passa o argumento 'worker'.
+    # Isso dirá ao script para iniciar os serviços de Worker (HDFS Datanode, YARN NodeManager, Spark Worker).
+    entrypoint: ['./entrypoint.sh', 'worker']
+    # Garante que o worker só será iniciado DEPOIS que o 'datauniverse-data-lake-master' estiver pronto.
+    depends_on:
+      - datauniverse-data-lake-master
+    # Carrega as mesmas variáveis de ambiente (essencial para que o worker saiba onde está o master).
+    env_file:
+      - .env.data-lake
+    # Monta os mesmos volumes de dados, jobs e logs.
+    # O worker precisa acessar os dados (Datanode), os scripts (para executar) e
+    # precisa de um lugar para escrever seus logs de eventos.
+    volumes:
+      - ./dados:/opt/spark/data
+      - ./jobs:/opt/spark/apps
+      - data-lake-logs:/opt/spark/data-lake-events
+
+# 'volumes' (no nível raiz) define volumes nomeados que são gerenciados pelo Docker.
+# Diferente dos "bind mounts" (./dados), estes volumes são pastas gerenciadas pelo próprio Docker.
+volumes:
+  # Declara o volume 'data-lake-logs'.
+  # Este volume é criado e gerenciado pelo Docker para persistir os logs de eventos do Spark,
+  # permitindo que o 'master' e o 'worker' escrevam nele, e o 'history-server' leia dele.
+  # Isso garante que os logs sobrevivam mesmo se os containers forem recriados.
+  data-lake-logs:

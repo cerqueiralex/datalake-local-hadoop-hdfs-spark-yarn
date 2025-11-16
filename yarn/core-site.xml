@@ -1,0 +1,19 @@
+<!-- 
+
+Define parâmetros centrais para todo o ecossistema Hadoop, 
+incluindo o HDFS (sistema de arquivos) e o YARN (gerenciamento de cluster). 
+A principal configuração definida aqui é o fs.defaultFS, 
+que informa a todos os serviços e clientes qual é o sistema de arquivos padrão do cluster e onde encontrar seu nó principal (o "Namenode"). 
+Essencialmente, é como dizer: "Qualquer caminho de arquivo que você vir (como /user/data) deve ser resolvido usando este servidor HDFS".
+
+https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/core-default.xml
+
+-->
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://dsamaster:8080</value>
+    </property>
+</configuration>
