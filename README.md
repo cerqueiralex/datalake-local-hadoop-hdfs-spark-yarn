@@ -9,7 +9,7 @@ Tecnologias:
   * Sistema de processamento: Apache Spark
 * Apache YARN (Gerenciador de recursos do cluster Hadoop)
 
-<img src="" style="width:100%;height:auto"/>
+<img src="https://i.imgur.com/CR8EFdt.png" style="width:100%;height:auto"/>
 
 ## Configuracao Docker 
 
@@ -110,7 +110,7 @@ Verificar se os arquyivos foram incluidos no HDFS (pode excluir os dados do dirr
 hdfs dfs -ls dataset.csv /opt/spark/data
 ```
 
-<img src="" style="width:100%;height:auto"/>
+<img src="https://i.imgur.com/jjGKbVE.jpeg" style="width:100%;height:auto"/>
 
 
 ## Treinar o modelo e salvar a métrica AUC
@@ -126,16 +126,17 @@ docker exec datauniversemaster spark-submit --master yarn --deploy-mode cluster 
 PORTS CONFIGURADOS
 
 * 7071:7077
-* 9091:8080 
+* 9091:8080
+* 18081 (History Server)
 * 8081:8088 (YARN)
 * 9871:9870 (HDFS)
 
-<img src="" style="width:100%;height:auto"/>
+<img src="https://i.imgur.com/z7frSmj.jpeg" style="width:100%;height:auto"/>
 
 > Acompanhamento e Monitoramento via Interface (HDFS)
 
-<img src="" style="width:100%;height:auto"/>
+<img src="https://i.imgur.com/rjZp16o.jpeg" style="width:100%;height:auto"/>
 
 > Acompanhamento e Monitoramento via Interface (History Server)
 
-<img src="" style="width:100%;height:auto"/>
+<img src="https://i.imgur.com/UmjtHkz.jpeg" style="width:100%;height:auto"/>
